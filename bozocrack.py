@@ -1,43 +1,43 @@
 #!/usr/bin/env python
-import hashlib
-import re
+import hashlib, re, sys, urllib2
 from urllib import FancyURLopener
-import sys
 from optparse import OptionParser
 
 HASH_REGEX = re.compile("([a-fA-F0-9]{32})")
 
+# Gets an HTTP response from a url
+def getResponse(url):
+	try:
+		response = urllib2.urlopen(url).read()
+	except:
+		print "Unexpected HTTP Error"
+		sys.exit(-1)
+	return response
 
-class MyOpener(FancyURLopener):
-    version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
 
-
+# h = hash as a hex string?
+# wordlist = a set
 def dictionary_attack(h, wordlist):
     for word in wordlist:
         if hashlib.md5(word).hexdigest() == h:
             return word
-
     return None
 
-
-def format_it(hash, plaintext):
-    return "{hash}:{plaintext}".format(hash=hash, plaintext=plaintext)
+# h = hash, as a hex string
+def format_it(h, plaintext):
+    return "{myhash}:{myplaintext}".format(myhash = h, myplaintext = plaintext)
 
 
 def crack_single_hash(h):
-    myopener = MyOpener()
-    response = myopener.open(
-        "http://www.google.com/search?q={hash}".format(hash=h))
+    response = getResponse("http://www.google.com/search?q={myhash}".format(myhash = h))
 
     wordlist = response.read().replace('.', ' ').replace(
         ':', ' ').replace('?', '').split(' ')
     plaintext = dictionary_attack(h, set(wordlist))
-
     return plaintext
 
 
 class BozoCrack(object):
-
     def __init__(self, filename, *args, **kwargs):
         self.hashes = []
 
@@ -74,15 +74,14 @@ class BozoCrack(object):
 
     def append_to_cache(self, h, plaintext, filename='cache'):
         with open(filename, 'a+') as c:
-            c.write(format_it(hash=h, plaintext=plaintext)+"\n")
+            c.write(format_it(hash = h, plaintext = plaintext)+"\n")
 
 if __name__ == '__main__':
-
     parser = OptionParser()
     parser.add_option('-s', '--single', metavar='MD5HASH',
-                      help='cracks a single hash', dest='single', default=False)
+                      help = 'cracks a single hash', dest='single', default = False)
     parser.add_option('-f', '--file', metavar='HASHFILE',
-                      help='cracks multiple hashes on a file', dest='target',)
+                      help = 'cracks multiple hashes on a file', dest = 'target',)
 
     options, args = parser.parse_args()
 
@@ -92,6 +91,6 @@ if __name__ == '__main__':
         plaintext = crack_single_hash(options.single)
 
         if plaintext:
-            print format_it(hash=options.single, plaintext=plaintext)
+            print format_it(hash = options.single, plaintext = plaintext)
     else:
         BozoCrack(options.target).crack()

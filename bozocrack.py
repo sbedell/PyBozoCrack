@@ -6,13 +6,17 @@ from optparse import OptionParser
 HASH_REGEX = re.compile("([a-fA-F0-9]{32})")
 
 # Gets an HTTP response from a url
+# This returns a string object
 def getResponse(url):
-	try:
-		response = urllib2.urlopen(url).read()
-	except:
-		print "Unexpected HTTP Error"
-		sys.exit(-1)
-	return response
+    opener = urllib2.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11')]
+
+    try:
+        response = opener.open(url).read()
+    except:
+        print "Unexpected HTTP Error"
+        sys.exit(-1)
+    return response
 
 
 # h = hash as a hex string?
@@ -29,10 +33,11 @@ def format_it(h, plaintext):
 
 
 def crack_single_hash(h):
-    response = getResponse("http://www.google.com/search?q={myhash}".format(myhash = h))
+    URL = "http://www.google.com/search?q={myhash}".format(myhash = h)
+    response = getResponse(URL)
 
-    wordlist = response.read().replace('.', ' ').replace(
-        ':', ' ').replace('?', '').split(' ')
+    wordlist = response.replace('.', ' ').replace(':', ' ').replace('?', '').split(' ')
+    #print wordlist
     plaintext = dictionary_attack(h, set(wordlist))
     return plaintext
 
@@ -74,7 +79,7 @@ class BozoCrack(object):
 
     def append_to_cache(self, h, plaintext, filename='cache'):
         with open(filename, 'a+') as c:
-            c.write(format_it(hash = h, plaintext = plaintext)+"\n")
+            c.write(format_it(h, plaintext)+"\n")
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -91,6 +96,6 @@ if __name__ == '__main__':
         plaintext = crack_single_hash(options.single)
 
         if plaintext:
-            print format_it(hash = options.single, plaintext = plaintext)
+            print format_it(options.single, plaintext)
     else:
         BozoCrack(options.target).crack()

@@ -5,8 +5,9 @@ from optparse import OptionParser
 
 HASH_REGEX = re.compile("([a-fA-F0-9]{32})")
 
-# Gets an HTTP response from a url
-# This returns a string object
+# Gets an HTTP response from a url, returns string
+# This spoofs the user agent because Google blocks
+# bot requets from urllib usually
 def getResponse(url):
     opener = urllib2.build_opener()
     opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11')]
@@ -52,7 +53,7 @@ class BozoCrack(object):
 
         self.hashes = sorted(set(hashes))
 
-        print "Loaded {count} unique hashes".format(count=len(self.hashes))
+        print "Loaded {count} unique hashes".format(count = len(self.hashes))
 
         self.cache = self.load_cache()
 
@@ -82,7 +83,7 @@ class BozoCrack(object):
             c.write(format_it(h, plaintext)+"\n")
 
 if __name__ == '__main__':
-    parser = OptionParser()
+    parser = OptionParser('python bozocrack.py <options>')
     parser.add_option('-s', '--single', metavar='MD5HASH',
                       help = 'cracks a single hash', dest='single', default = False)
     parser.add_option('-f', '--file', metavar='HASHFILE',

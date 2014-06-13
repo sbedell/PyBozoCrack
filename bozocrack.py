@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 import hashlib, re, sys, urllib2
-from urllib import FancyURLopener
 from optparse import OptionParser
 
 HASH_REGEX = re.compile("([a-fA-F0-9]{32})")
@@ -10,7 +9,7 @@ HASH_REGEX = re.compile("([a-fA-F0-9]{32})")
 # bot requets from urllib usually
 def getResponse(url):
     opener = urllib2.build_opener()
-    opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11')]
+    opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20121207 Firefox/29.0')]
 
     try:
         response = opener.open(url).read()
@@ -69,6 +68,8 @@ class BozoCrack(object):
                 print format_it(h, plaintext)
                 self.cache[h] = plaintext
                 self.append_to_cache(h, plaintext)
+            else:
+                print "Hash unable to be cracked."
 
     def load_cache(self, filename='cache'):
         cache = {}
@@ -98,5 +99,7 @@ if __name__ == '__main__':
 
         if plaintext:
             print format_it(options.single, plaintext)
+        else:
+            print "Hash unable to be cracked."
     else:
         BozoCrack(options.target).crack()

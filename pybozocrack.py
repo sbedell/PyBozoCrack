@@ -35,9 +35,9 @@ def format_it(h, plaintext):
 def crack_single_hash(h):
     URL = "http://www.google.com/search?q={myhash}".format(myhash = h)
     response = getResponse(URL)
-
-    wordlist = response.replace('.', ' ').replace(':', ' ').replace('?', '').split(' ')
-    #print wordlist
+	
+    wordlist = response.read().replace('.', ' ').replace(
+        ':', ' ').replace('?', '').replace("('", ' ').replace("'", ' ').split(' ')
     plaintext = dictionary_attack(h, set(wordlist))
     return plaintext
 
@@ -57,9 +57,11 @@ class BozoCrack(object):
         self.cache = self.load_cache()
 
     def crack(self):
+        cracked_hashes = []
         for h in self.hashes:
             if h in self.cache:
                 print format_it(h, self.cache[h])
+                cracked_hashes.append( (h, self.cache[h]) )
                 continue
 
             plaintext = crack_single_hash(h)
@@ -68,8 +70,11 @@ class BozoCrack(object):
                 print format_it(h, plaintext)
                 self.cache[h] = plaintext
                 self.append_to_cache(h, plaintext)
+				cracked_hashes.append( (h, plaintext) )
             else:
                 print "Hash unable to be cracked."
+				
+        return cracked_hashes
 
     def load_cache(self, filename='cache'):
         cache = {}
@@ -82,9 +87,9 @@ class BozoCrack(object):
     def append_to_cache(self, h, plaintext, filename='cache'):
         with open(filename, 'a+') as c:
             c.write(format_it(h, plaintext)+"\n")
-
-if __name__ == '__main__':
-    parser = OptionParser('python bozocrack.py <options>')
+			
+def main(): # pragma: no cover
+    parser = OptionParser()
     parser.add_option('-s', '--single', metavar='MD5HASH',
                       help = 'cracks a single hash', dest='single', default = False)
     parser.add_option('-f', '--file', metavar='HASHFILE',
@@ -102,4 +107,9 @@ if __name__ == '__main__':
         else:
             print "Hash unable to be cracked."
     else:
-        BozoCrack(options.target).crack()
+        cracked = BozoCrack(options.target).crack()
+        if not cracked:
+            print "No hashes were cracked."
+
+if __name__ == '__main__': # pragma: no cover
+    main()
